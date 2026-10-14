@@ -9,6 +9,20 @@
 
 基于 [`@tintinweb/pi-subagents`](https://github.com/tintinweb/pi-subagents) 的精简封装。在完整保留上游 Subagent 功能与运行时的同时，将所有操作收束为一个紧凑的工具接口，显著降低上下文占用。
 
+## 初始化上下文占用对比
+
+<!-- token-benchmark:benchmark:start -->
+单独启用本扩展时，模型可见的常驻初始化上下文如下：
+
+| 版本 | 工具与 Prompt 构成 | 合计 |
+| --- | --- | ---: |
+| Lean `@ssk_dev/pi-subagents-lean@0.22.1` | `subagent` (275) | **275** |
+| 上游 `@tintinweb/pi-subagents@0.22.0` | `Agent` (2,563) + `SubagentWorkflow` (5,611) + `get_subagent_result` (183) + `steer_subagent` (183) | **8,540** |
+
+节省 **8,265 tokens（96.8%）**。
+测量环境为 Pi 1.2.0 的独立临时进程、空白工作目录与空白配置。排除内置工具、Skills、上下文文件、会话历史、用户消息、无关扩展、运行时 UI 与 Slash Commands；计入扩展的 `before_agent_start` 注入。Token 是按 `ceil(字符数 / 4)` 计算的固定字符代理估算，并非模型 tokenizer 实际计费值。
+<!-- token-benchmark:benchmark:end -->
+
 ## 核心特性
 
 * 完整保留上游能力：包括 Agent 发现、后台派生运行、结果获取、动态引导（Steering）以及完整的生命周期管理。
@@ -62,20 +76,6 @@ subagent
 4. 注意命名冲突：同名的自定义 Agent 可能会根据优先级覆盖内置类型。
 
 原版自带 `general-purpose`、`Explore` 和 `Plan` 三种预设，你的环境可能会额外加载其他自定义类型。
-
-## 初始化上下文占用对比
-
-<!-- token-benchmark:benchmark:start -->
-单独启用本扩展时，模型可见的常驻初始化上下文如下：
-
-| 版本 | 工具与 Prompt 构成 | 合计 |
-| --- | --- | ---: |
-| Lean `@ssk_dev/pi-subagents-lean@0.22.0` | `subagent` (275) | **275** |
-| 上游 `@tintinweb/pi-subagents@0.22.0` | `Agent` (2,563) + `SubagentWorkflow` (5,611) + `get_subagent_result` (183) + `steer_subagent` (183) | **8,540** |
-
-节省 **8,265 tokens（96.8%）**。
-测量环境为 Pi 1.2.0 的独立临时进程、空白工作目录与空白配置。排除内置工具、Skills、上下文文件、会话历史、用户消息、无关扩展、运行时 UI 与 Slash Commands；计入扩展的 `before_agent_start` 注入。Token 是按 `ceil(字符数 / 4)` 计算的固定字符代理估算，并非模型 tokenizer 实际计费值。
-<!-- token-benchmark:benchmark:end -->
 
 ## 版本说明
 
