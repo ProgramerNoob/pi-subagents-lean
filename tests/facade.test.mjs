@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createJiti } from "jiti";
 import { fileURLToPath } from "node:url";
-import { Type } from "@sinclair/typebox";
+import { Type } from "typebox";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -369,4 +369,43 @@ test("run delegates call and result rendering to the original Agent tool", () =>
   });
   assert.equal(resultView.name, "Agent");
   assert.deepEqual(resultView.context.args, callView.args);
+});
+
+test("validates and routes against the real pinned upstream schemas", async () => {
+  const root = mkdtempSync(join(tmpdir(), "subagents-lean-real-"));
+  const previousDir = process.env.PI_CODING_AGENT_DIR;
+  const calls = [];
+  const { default: realUpstream } = await jiti.import("@tintinweb/pi-subagents/src/index.ts");
+  const stubExecute = (pi) => realUpstream(new Proxy(pi, {
+    get(target, key) {
+      if (key !== "registerTool") return target[key];
+      return (tool) => target.registerTool({
+        ...tool,
+        async execute(_callId, params) {
+          calls.push({ name: tool.name, params });
+          return { content: [{ type: "text", text: tool.name }], details: {} };
+        },
+      });
+    },
+  }));
+  try {
+    process.env.PI_CODING_AGENT_DIR = root;
+    const pi = makePi();
+    createSubagentsFacade(stubExecute)(pi);
+    const facade = pi.tools[0];
+    const run = (op, params) => facade.execute(op, { op, ...params }, undefined, undefined, { cwd: root });
+    await run("run", { prompt: "p", description: "d", subagent_type: "General" });
+    await run("result", { agent_id: "a", input: JSON.stringify({ wait: true }) });
+    await run("steer", { agent_id: "a", message: "m" });
+    await run("workflow", { input: JSON.stringify({ script: "return 1" }) });
+    assert.deepEqual(calls.map((call) => call.name),
+      ["Agent", "get_subagent_result", "steer_subagent", "SubagentWorkflow"]);
+    assert.equal(calls[1].params.wait, true);
+    await assert.rejects(run("run", { prompt: "p" }), /subagent run parameters are invalid.*description/s);
+    assert.equal(calls.length, 4);
+  } finally {
+    if (previousDir === undefined) delete process.env.PI_CODING_AGENT_DIR;
+    else process.env.PI_CODING_AGENT_DIR = previousDir;
+    rmSync(root, { recursive: true, force: true });
+  }
 });

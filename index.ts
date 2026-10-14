@@ -1,8 +1,8 @@
 // pi-subagents-lean: one provider-facing facade over the full subagents runtime.
 // Complete operation schemas stay local and are disclosed through help on demand.
 import type { ExtensionAPI, ToolDefinition } from "@earendil-works/pi-coding-agent";
-import { Type } from "@sinclair/typebox";
-import { Value } from "@sinclair/typebox/value";
+import { Type } from "typebox";
+import { Value } from "typebox/value";
 import subagents from "@tintinweb/pi-subagents/src/index.ts";
 import { Text } from "@earendil-works/pi-tui";
 const COLLAPSED_DISPLAY_SERVICE = Symbol.for(
@@ -29,6 +29,7 @@ type CapturedTool = ToolDefinition<any, any, any>;
 type UpstreamExtension = (pi: ExtensionAPI) => void;
 type FacadeOperation = "run" | "result" | "steer" | "workflow" | "help";
 
+const SUBAGENT_TYPE_HELP = 'Agent type; op=help with input "run" lists available types.';
 const FACADE_PARAMETERS = Type.Object({
   op: Type.Unsafe<FacadeOperation>({
     type: "string",
@@ -37,7 +38,7 @@ const FACADE_PARAMETERS = Type.Object({
   prompt: Type.Optional(Type.String({ description: "Task for run." })),
   description: Type.Optional(Type.String({ description: "3-5 word UI label for run." })),
   subagent_type: Type.Optional(
-    Type.String({ description: 'Agent type; op=help with input "run" lists available types.' }),
+    Type.String({ description: SUBAGENT_TYPE_HELP }),
   ),
   run_in_background: Type.Optional(Type.Boolean()),
   agent_id: Type.Optional(Type.String()),
@@ -93,7 +94,7 @@ export function createSubagentsFacade(
       subagent_type: Type.Optional(Type.String({
         description: match
           ? `Agent types at startup: ${match[1] || "(none)"}.`
-          : FACADE_PARAMETERS.properties.subagent_type.description,
+          : SUBAGENT_TYPE_HELP,
       })),
     });
 
@@ -174,7 +175,7 @@ export function createSubagentsFacade(
         const validationErrors = [...Value.Errors(target.parameters, routedParams)];
         if (validationErrors.length > 0) {
           const summary = validationErrors
-            .map((error) => `${error.path || "/"}: ${error.message}`)
+            .map((error) => `${error.instancePath || "/"}: ${error.message}`)
             .join("; ");
           throw new Error(`subagent ${params.op} parameters are invalid: ${summary}`);
         }
