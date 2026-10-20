@@ -16,7 +16,7 @@ With only this extension enabled, its recurring model-facing initialization cont
 
 | Variant | Tool and prompt contribution | Total |
 | --- | --- | ---: |
-| Lean `@ssk_dev/pi-subagents-lean@0.22.2` | `subagent` (276) | **276** |
+| Lean `@ssk_dev/pi-subagents-lean@0.22.3` | `subagent` (276) | **276** |
 | Upstream `@tintinweb/pi-subagents@0.22.0` | `Agent` (2,563) + `SubagentWorkflow` (5,611) + `get_subagent_result` (183) + `steer_subagent` (183) | **8,540** |
 
 This saves **8,264 tokens (96.8%)**.
@@ -64,6 +64,7 @@ Supported operations include `run`, `result`, `steer`, `workflow`, and `help`.
 * Use `steer` with `agent_id` and `message` to redirect a running agent.
 * Use `help` to inspect advanced upstream parameters when needed.
 * If a call omits `op`, it is inferred only when unambiguous: `prompt` or `subagent_type` means `run`; `agent_id` means `result`, or `steer` when `message` is also present.
+* If `input` is passed as an object instead of a JSON string, it is serialized automatically.
 
 ## Important: Review Your Agent Definitions
 

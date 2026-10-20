@@ -267,6 +267,45 @@ test("prepareArguments infers an omitted op only from unambiguous fields", async
   }
 });
 
+test("prepareArguments stringifies an object input and keeps it routable", async () => {
+  const calls = [];
+  const pi = makePi();
+  createSubagentsFacade(makeFakeUpstream(calls))(pi);
+  const facade = pi.tools[0];
+  const raw = { op: "result", agent_id: "agent-1", input: { wait: true, verbose: true } };
+  const rawSnapshot = structuredClone(raw);
+
+  assert.equal(Value.Check(facade.parameters, raw), false);
+  const prepared = facade.prepareArguments(raw);
+  assert.deepEqual(raw, rawSnapshot);
+  assert.deepEqual(prepared, { ...rawSnapshot, input: '{"wait":true,"verbose":true}' });
+  assert.ok(Value.Check(facade.parameters, prepared));
+  assert.deepEqual(facade.prepareArguments(prepared), prepared);
+
+  await facade.execute("call-object-input", prepared, undefined, undefined, { cwd: "C:/work" });
+  assert.deepEqual(calls.at(-1).params, { wait: true, verbose: true, agent_id: "agent-1" });
+
+  // op inference still works once input has been stringified.
+  const inferred = facade.prepareArguments({ agent_id: "agent-1", input: { wait: true } });
+  assert.equal(inferred.op, "result");
+  assert.equal(inferred.input, '{"wait":true}');
+
+  // Rendering uses the same repaired arguments.
+  const theme = { fg: () => "" };
+  const view = facade.renderCall(raw, theme, { args: raw });
+  assert.equal(view.name, "get_subagent_result");
+  assert.deepEqual(view.args, { wait: true, verbose: true, agent_id: "agent-1" });
+  const resultView = facade.renderResult({ content: [], details: {} }, {}, theme, { args: raw });
+  assert.equal(resultView.name, "get_subagent_result");
+  assert.deepEqual(resultView.context.args, view.args);
+
+  // Non-object input is left for the original validation.
+  for (const input of ["{}", 1, null]) {
+    const same = { op: "result", agent_id: "agent-1", input };
+    assert.equal(facade.prepareArguments(same), same);
+  }
+});
+
 test("result and steer route to their original tools", async () => {
   const calls = [];
   const pi = makePi();

@@ -16,7 +16,7 @@
 
 | 版本 | 工具与 Prompt 构成 | 合计 |
 | --- | --- | ---: |
-| Lean `@ssk_dev/pi-subagents-lean@0.22.2` | `subagent` (276) | **276** |
+| Lean `@ssk_dev/pi-subagents-lean@0.22.3` | `subagent` (276) | **276** |
 | 上游 `@tintinweb/pi-subagents@0.22.0` | `Agent` (2,563) + `SubagentWorkflow` (5,611) + `get_subagent_result` (183) + `steer_subagent` (183) | **8,540** |
 
 节省 **8,264 tokens（96.8%）**。
@@ -64,6 +64,7 @@ subagent
 * 使用 `steer` 搭配 `agent_id` 与 `message` 调整正在运行中的 Agent。
 * 使用 `help` 按需查看上游高级参数配置。
 * 调用漏传 `op` 时，仅在无歧义时自动推断：带 `prompt` 或 `subagent_type` 视为 `run`；带 `agent_id` 视为 `result`，同时带 `message` 则视为 `steer`。
+* `input` 误传为对象而非 JSON 字符串时，会自动序列化。
 
 ## 重要提醒：检查 Agent 定义配置
 
