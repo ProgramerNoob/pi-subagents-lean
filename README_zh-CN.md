@@ -16,7 +16,7 @@
 
 | 版本 | 工具与 Prompt 构成 | 合计 |
 | --- | --- | ---: |
-| Lean `@ssk_dev/pi-subagents-lean@0.22.1` | `subagent` (276) | **276** |
+| Lean `@ssk_dev/pi-subagents-lean@0.22.2` | `subagent` (276) | **276** |
 | 上游 `@tintinweb/pi-subagents@0.22.0` | `Agent` (2,563) + `SubagentWorkflow` (5,611) + `get_subagent_result` (183) + `steer_subagent` (183) | **8,540** |
 
 节省 **8,264 tokens（96.8%）**。
