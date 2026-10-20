@@ -1,7 +1,7 @@
 # @ssk_dev/pi-subagents-lean
 
 <!-- token-benchmark:summary:start -->
-> **Token benchmark: Lean 275, upstream `@tintinweb/pi-subagents@0.22.0` 8,540 — 96.8% fewer.**
+> **Token benchmark: Lean 276, upstream `@tintinweb/pi-subagents@0.22.0` 8,540 — 96.8% fewer.**
 <!-- token-benchmark:summary:end -->
 > [See my full setup for Pi](https://github.com/kunkun9527/my-lean-pi-setup)
 
@@ -16,10 +16,10 @@ With only this extension enabled, its recurring model-facing initialization cont
 
 | Variant | Tool and prompt contribution | Total |
 | --- | --- | ---: |
-| Lean `@ssk_dev/pi-subagents-lean@0.22.1` | `subagent` (275) | **275** |
+| Lean `@ssk_dev/pi-subagents-lean@0.22.1` | `subagent` (276) | **276** |
 | Upstream `@tintinweb/pi-subagents@0.22.0` | `Agent` (2,563) + `SubagentWorkflow` (5,611) + `get_subagent_result` (183) + `steer_subagent` (183) | **8,540** |
 
-This saves **8,265 tokens (96.8%)**.
+This saves **8,264 tokens (96.8%)**.
 Measured with Pi 1.3.0 in separate temporary processes with empty working directories and configuration. Built-in tools, skills, context files, session history, user messages, unrelated extensions, runtime UI, and slash commands are excluded; `before_agent_start` additions are included. Tokens are a fixed character-proxy estimate using `ceil(characters / 4)`, not provider tokenizer billing.
 <!-- token-benchmark:benchmark:end -->
 
@@ -63,6 +63,7 @@ Supported operations include `run`, `result`, `steer`, `workflow`, and `help`.
 * Use `result` with `agent_id` to retrieve output from a finished task.
 * Use `steer` with `agent_id` and `message` to redirect a running agent.
 * Use `help` to inspect advanced upstream parameters when needed.
+* If a call omits `op`, it is inferred only when unambiguous: `prompt` or `subagent_type` means `run`; `agent_id` means `result`, or `steer` when `message` is also present.
 
 ## Important: Review Your Agent Definitions
 

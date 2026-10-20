@@ -77,6 +77,16 @@ function getToolName(op: unknown): string {
   return op === "result" ? "get_subagent_result" : op === "steer" ? "steer_subagent" : op === "workflow" ? "SubagentWorkflow" : "Agent";
 }
 
+// Models primed on Task-style tools often omit op; infer it only when the fields are unambiguous.
+function prepareFacadeArguments(args: unknown): any {
+  if (!args || typeof args !== "object" || Array.isArray(args)) return args;
+  const fields = args as Record<string, unknown>;
+  if (fields.op !== undefined) return fields;
+  if (fields.prompt !== undefined || fields.subagent_type !== undefined) return { ...fields, op: "run" };
+  if (fields.agent_id !== undefined) return { ...fields, op: fields.message !== undefined ? "steer" : "result" };
+  return fields;
+}
+
 
 export function createSubagentsFacade(
   upstream: UpstreamExtension = subagents,
@@ -104,23 +114,24 @@ export function createSubagentsFacade(
       description: "Run or inspect subagents/workflows through one tool; use help for advanced parameters.",
       parameters,
       promptGuidelines: [
-        "subagent: run requires prompt, description (3-5 words), and subagent_type; use workflow for scripted multi-agent orchestration.",
+        "subagent: op=run requires prompt, description (3-5 words), and subagent_type; use workflow for scripted multi-agent orchestration.",
         "subagent: Put advanced options in input as a JSON object; direct fields override duplicate JSON keys. result uses agent_id; steer uses agent_id and message. Use help only when advanced parameters are unclear.",
         "subagent: Background completion is notified; never poll or sleep. Summarize results and verify claimed code changes.",
       ],
+      prepareArguments: prepareFacadeArguments,
       renderCall(args, theme, context) {
         const routed = renderParams(args);
-        const toolName = getToolName(args.op);
-        const target = tools.get(toolName);
+        const op = prepareFacadeArguments(args).op;
+        const target = tools.get(getToolName(op));
         if (target?.renderCall) {
           return target.renderCall(routed, theme, { ...context, args: routed });
         }
-        return new Text(theme.fg("toolTitle", `subagent ${args.op}`), 0, 0);
+        return new Text(theme.fg("toolTitle", `subagent ${op}`), 0, 0);
       },
       renderResult(result, options, theme, context) {
         const facadeArgs = context.args;
         const routed = renderParams(facadeArgs);
-        const toolName = getToolName(facadeArgs.op);
+        const toolName = getToolName(prepareFacadeArguments(facadeArgs).op);
         const target = tools.get(toolName);
         if (target?.renderResult) {
           return target.renderResult(result, options, theme, { ...context, args: routed });

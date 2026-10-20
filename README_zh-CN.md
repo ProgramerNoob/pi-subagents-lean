@@ -1,7 +1,7 @@
 # @ssk_dev/pi-subagents-lean
 
 <!-- token-benchmark:summary:start -->
-> **Token 基准：Lean 275，上游 `@tintinweb/pi-subagents@0.22.0` 8,540，减少 96.8%。**
+> **Token 基准：Lean 276，上游 `@tintinweb/pi-subagents@0.22.0` 8,540，减少 96.8%。**
 <!-- token-benchmark:summary:end -->
 > **完整配置参考：** [查看 Pi Lean Setup](https://github.com/kunkun9527/my-lean-pi-setup)
 
@@ -16,10 +16,10 @@
 
 | 版本 | 工具与 Prompt 构成 | 合计 |
 | --- | --- | ---: |
-| Lean `@ssk_dev/pi-subagents-lean@0.22.1` | `subagent` (275) | **275** |
+| Lean `@ssk_dev/pi-subagents-lean@0.22.1` | `subagent` (276) | **276** |
 | 上游 `@tintinweb/pi-subagents@0.22.0` | `Agent` (2,563) + `SubagentWorkflow` (5,611) + `get_subagent_result` (183) + `steer_subagent` (183) | **8,540** |
 
-节省 **8,265 tokens（96.8%）**。
+节省 **8,264 tokens（96.8%）**。
 测量环境为 Pi 1.3.0 的独立临时进程、空白工作目录与空白配置。排除内置工具、Skills、上下文文件、会话历史、用户消息、无关扩展、运行时 UI 与 Slash Commands；计入扩展的 `before_agent_start` 注入。Token 是按 `ceil(字符数 / 4)` 计算的固定字符代理估算，并非模型 tokenizer 实际计费值。
 <!-- token-benchmark:benchmark:end -->
 
@@ -63,6 +63,7 @@ subagent
 * 使用 `result` 搭配 `agent_id` 查看已完成任务的输出结果。
 * 使用 `steer` 搭配 `agent_id` 与 `message` 调整正在运行中的 Agent。
 * 使用 `help` 按需查看上游高级参数配置。
+* 调用漏传 `op` 时，仅在无歧义时自动推断：带 `prompt` 或 `subagent_type` 视为 `run`；带 `agent_id` 视为 `result`，同时带 `message` 则视为 `steer`。
 
 ## 重要提醒：检查 Agent 定义配置
 

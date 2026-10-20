@@ -3,6 +3,7 @@ import test from "node:test";
 import { createJiti } from "jiti";
 import { fileURLToPath } from "node:url";
 import { Type } from "typebox";
+import { Value } from "typebox/value";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -236,6 +237,34 @@ test("run merges advanced JSON while direct common fields take precedence", asyn
     description: "advanced run",
     subagent_type: "general-purpose",
   });
+});
+
+test("prepareArguments infers an omitted op only from unambiguous fields", async () => {
+  const calls = [];
+  const pi = makePi();
+  createSubagentsFacade(makeFakeUpstream(calls))(pi);
+  const facade = pi.tools[0];
+  const cases = [
+    [{ prompt: "Inspect", description: "inspect parser", subagent_type: "Explore" }, "run", "Agent"],
+    [{ agent_id: "agent-1" }, "result", "get_subagent_result"],
+    [{ agent_id: "agent-1", message: "Stop" }, "steer", "steer_subagent"],
+  ];
+
+  for (const [raw, op, toolName] of cases) {
+    const prepared = facade.prepareArguments(raw);
+    assert.equal(prepared.op, op);
+    assert.ok(Value.Check(facade.parameters, prepared));
+    await facade.execute(`call-${op}`, prepared, undefined, undefined, { cwd: "C:/work" });
+    assert.equal(calls.at(-1).name, toolName);
+    assert.deepEqual(calls.at(-1).params, raw);
+  }
+
+  const explicit = { op: "help", prompt: "Inspect" };
+  assert.equal(facade.prepareArguments(explicit), explicit);
+  for (const ambiguous of [{}, { message: "Stop" }, { input: "{}" }]) {
+    assert.equal(facade.prepareArguments(ambiguous), ambiguous);
+    assert.equal(Value.Check(facade.parameters, ambiguous), false);
+  }
 });
 
 test("result and steer route to their original tools", async () => {
