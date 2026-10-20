@@ -261,7 +261,7 @@ test("prepareArguments infers an omitted op only from unambiguous fields", async
 
   const explicit = { op: "help", prompt: "Inspect" };
   assert.equal(facade.prepareArguments(explicit), explicit);
-  for (const ambiguous of [{}, { message: "Stop" }, { input: "{}" }]) {
+  for (const ambiguous of [{}, { message: "Stop" }, { input: "{}" }, { prompt: "Inspect", agent_id: "agent-1" }, { subagent_type: "Explore", agent_id: "agent-1", message: "Go" }]) {
     assert.equal(facade.prepareArguments(ambiguous), ambiguous);
     assert.equal(Value.Check(facade.parameters, ambiguous), false);
   }

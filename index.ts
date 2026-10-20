@@ -83,9 +83,11 @@ function prepareFacadeArguments(args: unknown): any {
   let fields = args as Record<string, unknown>;
   if (fields.input && typeof fields.input === "object") fields = { ...fields, input: JSON.stringify(fields.input) };
   if (fields.op !== undefined) return fields;
-  if (fields.prompt !== undefined || fields.subagent_type !== undefined) return { ...fields, op: "run" };
-  if (fields.agent_id !== undefined) return { ...fields, op: fields.message !== undefined ? "steer" : "result" };
-  return fields;
+  const run = fields.prompt !== undefined || fields.subagent_type !== undefined;
+  const agent = fields.agent_id !== undefined;
+  if (run === agent) return fields; // neither, or mixed run and agent_id signals
+  if (run) return { ...fields, op: "run" };
+  return { ...fields, op: fields.message !== undefined ? "steer" : "result" };
 }
 
 
